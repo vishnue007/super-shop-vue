@@ -59,10 +59,6 @@ const password = ref('')
 const rememberMe = ref(false)
 
 function handleLogin() {
-  console.log('Email:', email.value)
-  console.log('Password:', password.value)
-  console.log('Remember Me:', rememberMe.value)
-
-  // You can now send these to your API or do validation
+ 
 }
 </script>

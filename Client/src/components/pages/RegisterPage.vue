@@ -74,9 +74,6 @@ const form = reactive({
 })
 
 const handleSubmit = () => {
-  console.log('Form submitted:', form)
-
-  // You can also do validations here
   if (form.password !== form.confirmPassword) {
     alert("Passwords don't match!")
     return

@@ -53,12 +53,31 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import router from '../../router'
 
 const email = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 
-function handleLogin() {
- 
+const handleLogin = async () => {
+  try {
+    const res = await fetch('http://localhost:5000/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.value, password: password.value })
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      localStorage.setItem('token', data.token); // Save token
+      router.push('/home') // Redirect to dashboard after login
+    } else {
+      alert(data.message || 'Login failed.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Something went wrong.');
+  }
 }
 </script>

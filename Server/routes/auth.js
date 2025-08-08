@@ -1,6 +1,7 @@
 // server/routes/auth.js
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const router = express.Router();
 
 const users = []; // Temporary in-memory storage (for demo)
@@ -28,5 +29,37 @@ router.post('/register', async (req, res) => {
 
   res.status(201).json({ message: 'User registered successfully!', user: { name, email } });
 });
+
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // 1. Find user
+    const user = users.find(u => u.email === email);
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Invalid email or password' });
+    }
+
+    // 2. Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Invalid email or password' });
+    }
+
+    // 3. Create token
+    const token = jwt.sign({ email: user.email }, 'your_jwt_secret', { expiresIn: '1h' });
+
+    res.json({ 
+      success: true, 
+      message: 'Login successful', 
+      token 
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 
 module.exports = router;

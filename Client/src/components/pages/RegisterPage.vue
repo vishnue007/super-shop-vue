@@ -65,6 +65,7 @@
 
 <script setup lang="ts">
 import { reactive } from 'vue'
+import router from '../../router'
 
 const form = reactive({
   name: '',
@@ -73,12 +74,36 @@ const form = reactive({
   confirmPassword: '',
 })
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   if (form.password !== form.confirmPassword) {
     alert("Passwords don't match!")
     return
   }
 
+  try {
+    const response = await fetch('http://localhost:5000/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: form.name,
+        email: form.email,
+        password: form.password
+      })
+    })
+
+    const data = await response.json()
+    
+    if (response.ok) {
+      router.push('/login');
+    } else {
+      alert(data.message || 'Registration failed!')
+    }
+  } catch (error) {
+    console.error('Error:', error)
+    alert('An error occurred during registration!')
+  }
 }
 </script>
 

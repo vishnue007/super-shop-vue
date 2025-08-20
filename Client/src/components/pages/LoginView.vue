@@ -71,13 +71,49 @@ const handleLogin = async () => {
 
     if (res.ok && data.success) {
       localStorage.setItem('token', data.token); // Save token
-      router.push('/home') // Redirect to dashboard after login
+      localStorage.setItem('user', JSON.stringify(data.user)); // Save user data
+      router.push('/') // Redirect to dashboard after login
     } else {
       alert(data.message || 'Login failed.');
     }
   } catch (err) {
     console.error(err);
     alert('Something went wrong.');
+  }
+}
+
+const handleLogout = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+      // Call logout API
+      const res = await fetch('http://localhost:5000/api/auth/logout', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        console.log('Logout successful');
+      }
+    }
+
+    // Clear local storage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Redirect to login
+    router.push('/login');
+    
+  } catch (err) {
+    console.error('Logout error:', err);
+    // Still clear local storage even if API call fails
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/login');
   }
 }
 </script>

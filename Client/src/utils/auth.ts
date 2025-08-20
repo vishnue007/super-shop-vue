@@ -2,8 +2,59 @@
 
 const API_BASE_URL = 'http://localhost:5000/api/auth';
 
+// Types
+export class User {
+  constructor(
+    public _id: string,
+    public name: string,
+    public email: string,
+    public createdAt: string,
+    public lastLogin?: string,
+    public lastLogout?: string
+  ) {}
+}
+
+export interface AuthResponse {
+  success: boolean;
+  data?: {
+    user: User;
+    token: string;
+  };
+  message?: string;
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  data?: {
+    user: User;
+  };
+  message?: string;
+}
+
+// Register function
+export const register = async (name: string, email: string, password: string): Promise<RegisterResponse> => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      return { success: true, data };
+    } else {
+      return { success: false, message: data.message || 'Registration failed' };
+    }
+  } catch (err) {
+    console.error('Registration error:', err);
+    return { success: false, message: 'Network error' };
+  }
+};
+
 // Login function
-export const login = async (email, password) => {
+export const login = async (email: string, password: string): Promise<AuthResponse> => {
   try {
     const res = await fetch(`${API_BASE_URL}/login`, {
       method: 'POST',
@@ -14,8 +65,6 @@ export const login = async (email, password) => {
     const data = await res.json();
 
     if (res.ok && data.success) {
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
       return { success: true, data };
     } else {
       return { success: false, message: data.message || 'Login failed' };
@@ -27,7 +76,7 @@ export const login = async (email, password) => {
 };
 
 // Logout function
-export const logout = async () => {
+export const logout = async (): Promise<{ success: boolean }> => {
   try {
     const token = localStorage.getItem('token');
     
@@ -54,7 +103,7 @@ export const logout = async () => {
     
   } catch (err) {
     console.error('Logout error:', err);
-    // Still clear local storage even if API call fails
+    // Still clear local storage even if API fails
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     return { success: true };
@@ -62,24 +111,24 @@ export const logout = async () => {
 };
 
 // Check if user is authenticated
-export const isAuthenticated = () => {
+export const isAuthenticated = (): boolean => {
   const token = localStorage.getItem('token');
   return !!token;
 };
 
 // Get current user
-export const getCurrentUser = () => {
+export const getCurrentUser = (): User | null => {
   const userStr = localStorage.getItem('user');
   return userStr ? JSON.parse(userStr) : null;
 };
 
 // Get token
-export const getToken = () => {
+export const getToken = (): string | null => {
   return localStorage.getItem('token');
 };
 
 // Check token validity
-export const isTokenValid = async () => {
+export const isTokenValid = async (): Promise<boolean> => {
   try {
     const token = localStorage.getItem('token');
     if (!token) return false;

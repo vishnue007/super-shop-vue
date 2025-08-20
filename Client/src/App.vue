@@ -1,16 +1,22 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
+import { useAuthStore } from './stores/auth';
+import Navbar from './components/layouts/Navbar.vue';
+
+const authStore = useAuthStore();
 
 onMounted(() => {
-  fetch('http://localhost:5000/api/hello')
-    .then(res => res.json())
-    .then(data => console.log(data));
+  // Check if user is already authenticated (e.g., page refresh)
+  authStore.checkAuth();
 });
 </script>
 
 <template>
   <div class="min-h-screen">
-    <router-view />
+    <Navbar />
+    <main>
+      <router-view />
+    </main>
   </div>
 </template>
 

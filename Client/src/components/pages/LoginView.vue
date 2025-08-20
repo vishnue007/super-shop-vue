@@ -34,12 +34,19 @@
           <a href="#" class="hover:underline">Forgot password?</a>
         </div>
 
+        <!-- Error Message -->
+        <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {{ error }}
+        </div>
+
         <button
           @click.prevent="handleLogin"
+          :disabled="isLoading"
           type="button"
-          class="w-full py-3 rounded-lg bg-white text-indigo-600 font-bold hover:bg-indigo-100 transition duration-300 shadow-md"
+          class="w-full py-3 rounded-lg bg-white text-indigo-600 font-bold hover:bg-indigo-100 transition duration-300 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Log In
+          <span v-if="isLoading">Logging in...</span>
+          <span v-else>Log In</span>
         </button>
 
         <p class="text-white text-sm text-center mt-4">
@@ -52,68 +59,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import router from '../../router'
+import { ref, computed, onMounted } from 'vue'
+import { useAuthStore } from '../../stores/auth'
+
+const authStore = useAuthStore()
 
 const email = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 
+// Reactive state from store
+const isLoading = computed(() => authStore.isLoading)
+const error = computed(() => authStore.authError)
+
 const handleLogin = async () => {
-  try {
-    const res = await fetch('http://localhost:5000/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.value, password: password.value })
-    });
+  if (!email.value || !password.value) {
+    alert('Please fill in all fields')
+    return
+  }
 
-    const data = await res.json();
-
-    if (res.ok && data.success) {
-      localStorage.setItem('token', data.token); // Save token
-      localStorage.setItem('user', JSON.stringify(data.user)); // Save user data
-      router.push('/') // Redirect to dashboard after login
-    } else {
-      alert(data.message || 'Login failed.');
-    }
-  } catch (err) {
-    console.error(err);
-    alert('Something went wrong.');
+  const result = await authStore.login(email.value, password.value)
+  
+  if (!result.success) {
+    // Error is already set in the store
+    setTimeout(() => authStore.clearError(), 5000) // Clear error after 5 seconds
   }
 }
 
-const handleLogout = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    
-    if (token) {
-      // Call logout API
-      const res = await fetch('http://localhost:5000/api/auth/logout', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (res.ok) {
-        console.log('Logout successful');
-      }
-    }
-
-    // Clear local storage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    
-    // Redirect to login
-    router.push('/login');
-    
-  } catch (err) {
-    console.error('Logout error:', err);
-    // Still clear local storage even if API call fails
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/login');
-  }
-}
+// Clear error when component mounts
+onMounted(() => {
+  authStore.clearError()
+})
 </script>

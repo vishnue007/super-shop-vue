@@ -46,12 +46,24 @@
           />
         </div>
 
+        <!-- Error Message -->
+        <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {{ error }}
+        </div>
+
+        <!-- Success Message -->
+        <div v-if="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          {{ successMessage }}
+        </div>
+
         <button
           type="button"
-          class="w-full py-3 rounded-lg bg-white text-purple-600 font-bold hover:bg-purple-100 transition duration-300 shadow-md"
+          :disabled="isLoading"
+          class="w-full py-3 rounded-lg bg-white text-purple-600 font-bold hover:bg-purple-100 transition duration-300 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           @click="handleSubmit"
         >
-          Sign Up
+          <span v-if="isLoading">Creating Account...</span>
+          <span v-else>Sign Up</span>
         </button>
 
         <p class="text-white text-sm text-center mt-4">
@@ -64,8 +76,11 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, computed, ref, onMounted } from 'vue'
+import { useAuthStore } from '../../stores/auth'
 import router from '../../router'
+
+const authStore = useAuthStore()
 
 const form = reactive({
   name: '',
@@ -74,36 +89,45 @@ const form = reactive({
   confirmPassword: '',
 })
 
+// Reactive state from store
+const isLoading = computed(() => authStore.isLoading)
+const error = computed(() => authStore.authError)
+const successMessage = ref('')
+
 const handleSubmit = async () => {
   if (form.password !== form.confirmPassword) {
     alert("Passwords don't match!")
     return
   }
 
-  try {
-    const response = await fetch('http://localhost:5000/api/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: form.name,
-        email: form.email,
-        password: form.password
-      })
-    })
+  if (!form.name || !form.email || !form.password) {
+    alert('Please fill in all fields')
+    return
+  }
 
-    const data = await response.json()
+  const result = await authStore.register(form.name, form.email, form.password)
+  
+  if (result.success) {
+    successMessage.value = result.message
+    // Clear form
+    form.name = ''
+    form.email = ''
+    form.password = ''
+    form.confirmPassword = ''
     
-    if (response.ok) {
-      router.push('/login');
-    } else {
-      alert(data.message || 'Registration failed!')
-    }
-  } catch (error) {
-    console.error('Error:', error)
-    alert('An error occurred during registration!')
+    // Redirect to login after 2 seconds
+    setTimeout(() => {
+      router.push('/login')
+    }, 2000)
+  } else {
+    // Error is already set in the store
+    setTimeout(() => authStore.clearError(), 5000) // Clear error after 5 seconds
   }
 }
+
+// Clear error when component mounts
+onMounted(() => {
+  authStore.clearError()
+})
 </script>
 

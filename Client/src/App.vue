@@ -1,19 +1,21 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useAuthStore } from './stores/auth';
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import Navbar from './components/layouts/Navbar.vue';
 
-const authStore = useAuthStore();
+const route = useRoute();
 
-onMounted(() => {
-  // Check if user is already authenticated (e.g., page refresh)
-  authStore.checkAuth();
+// Hide navbar on login and register pages
+const showNavbar = computed(() => {
+  const hideNavbarRoutes = ['/login', '/register'];
+  return !hideNavbarRoutes.includes(route.path);
 });
+
 </script>
 
 <template>
   <div class="min-h-screen">
-    <Navbar />
+    <Navbar v-if="showNavbar" />
     <main>
       <router-view />
     </main>

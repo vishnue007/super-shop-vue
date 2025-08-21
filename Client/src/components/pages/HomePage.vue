@@ -3,15 +3,6 @@
     <h1 class="text-4xl font-extrabold mb-4 drop-shadow-lg">
       Welcome to the Home Page 🎉
     </h1>
-    <p class="text-lg mb-8">
-      You are successfully logged in.
-    </p>
-    <button
-      @click="logout"
-      class="px-6 py-3 bg-white text-purple-600 rounded-lg shadow-lg font-bold hover:bg-purple-100 transition duration-300"
-    >
-      Logout
-    </button>
   </div>
 </template>
 

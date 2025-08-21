@@ -109,6 +109,11 @@ export const useAuthStore = defineStore('auth', () => {
     
     if (storedToken && storedUser) {
       try {
+        // Basic token validation (you might want to add JWT expiration check)
+        if (storedToken.length < 10) { // Basic validation
+          throw new Error('Invalid token format')
+        }
+        
         token.value = storedToken
         user.value = JSON.parse(storedUser)
         return true
@@ -116,6 +121,8 @@ export const useAuthStore = defineStore('auth', () => {
         // Invalid stored data, clear it
         localStorage.removeItem('token')
         localStorage.removeItem('user')
+        user.value = null
+        token.value = null
         return false
       }
     }

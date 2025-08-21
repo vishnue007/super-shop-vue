@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import Navbar from './components/layouts/Navbar.vue';
+import Footer from './components/layouts/Footer.vue';
 
 const route = useRoute();
 
@@ -19,6 +20,7 @@ const showNavbar = computed(() => {
     <main>
       <router-view />
     </main>
+    <Footer v-if="showNavbar" />
   </div>
 </template>
 
